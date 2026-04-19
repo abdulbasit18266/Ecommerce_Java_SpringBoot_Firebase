@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Device | Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5 mb-5">
+    <div class="card shadow border-0 p-4">
+        <h2 class="fw-bold text-warning mb-4">Edit Device Details 🛠️</h2>
+
+        <form th:action="@{/admin/update-product}" th:object="${product}" method="post">
+            <input type="hidden" th:field="*{id}">
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Product Name</label>
+                    <input type="text" th:field="*{name}" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Brand</label>
+                    <input type="text" th:field="*{brand}" class="form-control" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Price (₹)</label>
+                    <input type="number" step="0.01" th:field="*{price}" class="form-control" required>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Image URL</label>
+                    <input type="text" th:field="*{image}" class="form-control" required>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">RAM</label>
+                    <input type="text" th:field="*{ram}" class="form-control" placeholder="e.g. 8GB">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Storage</label>
+                    <input type="text" th:field="*{storage}" class="form-control" placeholder="e.g. 128GB">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Processor</label>
+                    <input type="text" th:field="*{processor}" class="form-control" placeholder="e.g. A17 Bionic">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Rating (1-5)</label>
+                    <input type="number" step="0.1" th:field="*{rating}" class="form-control">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Short Description</label>
+                    <textarea th:field="*{description}" class="form-control" rows="2"></textarea>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Full Technical Specs</label>
+                    <textarea th:field="*{fullSpecs}" class="form-control" rows="4"></textarea>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-success px-5 fw-bold">Update Device</button>
+                    <a href="/admin/dashboard" class="btn btn-outline-secondary px-5">Cancel</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>
