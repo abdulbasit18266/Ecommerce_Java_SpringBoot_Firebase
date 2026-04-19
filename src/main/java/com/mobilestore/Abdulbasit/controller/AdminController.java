@@ -22,15 +22,15 @@ public class AdminController {
     @Autowired
     private OrderService orderService;
 
+    // ✅ FIXED: Added 'throws Exception' to handle Firestore async calls
     @GetMapping("/dashboard")
-    public String adminDashboard(Model model) {
+    public String adminDashboard(Model model) throws Exception {
         List<Product> products = productService.getAllProducts();
         List<Order> orders = orderService.getAllOrders();
 
         if (products == null) products = List.of();
         if (orders == null) orders = List.of();
 
-        // ✅ FIXED: Brand counting logic (Generalized for all brands)
         long appleCount = products.stream()
                 .filter(p -> p.getBrand() != null && (p.getBrand().equalsIgnoreCase("Apple") || p.getBrand().contains("iPhone")))
                 .count();
@@ -41,7 +41,6 @@ public class AdminController {
 
         double totalRevenue = orders.stream().mapToDouble(Order::getTotalAmount).sum();
 
-        // ✅ FIXED: Graph Data - Ensure we have values
         List<Double> orderAmounts = orders.stream()
                 .map(Order::getTotalAmount)
                 .collect(Collectors.toList());
@@ -92,8 +91,9 @@ public class AdminController {
         return "redirect:/admin/dashboard";
     }
 
+    // ✅ FIXED: Added 'throws Exception' here as well
     @GetMapping("/orders")
-    public String viewOrders(Model model) {
+    public String viewOrders(Model model) throws Exception {
         List<Order> orders = orderService.getAllOrders();
         model.addAttribute("orders", orders);
         return "admin_orders";

@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 public class CartService {
 
     @Autowired
-    private ProductFirestoreService productService;
+    private ProductFirestoreService productFirestoreService; // CORRECTED: Injected service
 
     private static final String COLLECTION_NAME = "carts";
 
@@ -26,10 +26,8 @@ public class CartService {
 
         CartItem item = new CartItem(productId, 1);
         cartRef.set(item).get();
-        System.out.println("DEBUG: Product added to Firestore Cart: " + productId);
     }
 
-    // Is method ka naam OrderController mein sahi se use karna hai
     public List<Object[]> getCartWithProducts(String userId) throws ExecutionException, InterruptedException {
         Firestore db = FirestoreClient.getFirestore();
         CollectionReference itemsRef = db.collection(COLLECTION_NAME).document(userId).collection("items");
@@ -41,7 +39,8 @@ public class CartService {
 
         for (QueryDocumentSnapshot doc : documents) {
             String productId = doc.getString("productId");
-            Product p = productService.getProductById(productId);
+            // Product fetch using correct service name
+            Product p = productFirestoreService.getProductById(productId);
 
             if (p != null) {
                 // Mapping: 0:Name, 1:Brand, 2:Price, 3:Image, 4:ID
@@ -60,14 +59,8 @@ public class CartService {
     public static class CartItem {
         private String productId;
         private int quantity;
-
         public CartItem() {}
-
-        public CartItem(String productId, int quantity) {
-            this.productId = productId;
-            this.quantity = quantity;
-        }
-
+        public CartItem(String productId, int quantity) { this.productId = productId; this.quantity = quantity; }
         public String getProductId() { return productId; }
         public void setProductId(String productId) { this.productId = productId; }
         public int getQuantity() { return quantity; }

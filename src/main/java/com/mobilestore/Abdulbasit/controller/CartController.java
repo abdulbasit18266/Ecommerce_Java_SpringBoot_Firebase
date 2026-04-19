@@ -19,65 +19,70 @@ public class CartController {
     // 1. Add to Cart Logic
     @GetMapping("/add-to-cart/{id}")
     public String addToCart(@PathVariable("id") String productId, HttpSession session) {
-        User user = (User) session.getAttribute("loggedInUser");
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+        try {
+            cartService.addToCart(user.getId(), productId);
+            return "redirect:/?success=true";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/?error=true";
+        }
+    }
 
+    // 2. Show Cart Page (FIXED: Subtotal & Total Amount null problem)
+    @GetMapping("/cart")
+    public String showCartPage(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
         if (user == null) {
             return "redirect:/login";
         }
 
         try {
-            // Firestore String ID use ho rahi hai, casting (int) ki zaroorat nahi
-            cartService.addToCart(user.getId(), productId);
+            List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
+
+            // Calculation Logic for Subtotal
+            double total = 0;
+            if (cartItems != null && !cartItems.isEmpty()) {
+                total = cartItems.stream()
+                        .mapToDouble(item -> {
+                            try {
+                                return Double.parseDouble(item[2].toString());
+                            } catch (Exception e) {
+                                return 0.0;
+                            }
+                        })
+                        .sum();
+            }
+
+            // HTML variables matching
+            model.addAttribute("cartItems", cartItems);
+            model.addAttribute("totalPrice", total); // Isse 'null' hat jayega
+            return "cart";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/?error=true";
+        }
+    }
+
+    // 3. Remove Item Logic (FIXED: 404 Error problem)
+    @GetMapping("/remove-from-cart/{id}")
+    public String removeFromCart(@PathVariable("id") String productId, HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+        try {
+            // Null check taaki console error na aaye
+            if (productId != null) {
+                cartService.removeFromCart(user.getId(), productId);
+            }
             return "redirect:/cart";
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/product/" + productId + "?error=failed";
-        }
-    }
-
-    // 2. View Cart Page (ISKI WAJAH SE 404 AA RAHA THA)
-    @GetMapping("/cart")
-    public String viewCart(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("loggedInUser");
-
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        try {
-            // Cart items fetch karo details ke saath
-            List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
-
-            // Total price calculate karne ka logic
-            double total = cartItems.stream()
-                    .mapToDouble(item -> (double) item[2]) // Price index 2 par hai
-                    .sum();
-
-            model.addAttribute("cartItems", cartItems);
-            model.addAttribute("totalPrice", total);
-
-            return "cart"; // Ye return karega cart.html template
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "error";
-        }
-    }
-
-    // 3. Remove from Cart Logic
-    @GetMapping("/remove-from-cart/{id}")
-    public String removeFromCart(@PathVariable("id") String productId, HttpSession session) {
-        User user = (User) session.getAttribute("loggedInUser");
-
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        try {
-            cartService.removeFromCart(user.getId(), productId);
-            return "redirect:/cart?removed=true";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/cart?error=deletefailed";
+            return "redirect:/cart?error=true";
         }
     }
 }

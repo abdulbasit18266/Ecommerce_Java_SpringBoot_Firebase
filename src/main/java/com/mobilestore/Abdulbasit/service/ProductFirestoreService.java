@@ -5,91 +5,63 @@ import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import com.mobilestore.Abdulbasit.entity.Product;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductFirestoreService {
 
-    private static final String COLLECTION_NAME = "products";
+    private Firestore getDb() {
+        return FirestoreClient.getFirestore();
+    }
 
-    // 1. Fetch all products (WITH SORTING)
     public List<Product> getAllProducts() throws ExecutionException, InterruptedException {
-        Firestore db = FirestoreClient.getFirestore();
-
-        // .orderBy("brand") se devices brand ke hisaab se line se aayenge
-        // .orderBy("name") se model name bhi sequence mein rahega
-        Query query = db.collection(COLLECTION_NAME).orderBy("brand").orderBy("name");
-
-        ApiFuture<QuerySnapshot> querySnapshot = query.get();
-        List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
-
-        List<Product> productList = new ArrayList<>();
-
-        System.out.println("DEBUG: Connection successful. Total devices: " + documents.size());
-
+        Firestore db = getDb();
+        ApiFuture<QuerySnapshot> future = db.collection("products")
+                .orderBy("brand", Query.Direction.ASCENDING)
+                .orderBy("name", Query.Direction.ASCENDING)
+                .get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+        List<Product> products = new ArrayList<>();
         for (QueryDocumentSnapshot document : documents) {
-            try {
-                Product product = document.toObject(Product.class);
-                product.setId(document.getId());
-                productList.add(product);
-            } catch (Exception e) {
-                System.err.println("DEBUG: Error mapping ID " + document.getId() + " - " + e.getMessage());
-            }
+            Product product = document.toObject(Product.class);
+            product.setId(document.getId());
+            products.add(product);
         }
-        return productList;
+        return products;
     }
 
-    // 2. Filter by brand
     public List<Product> getProductsByBrand(String brand) throws ExecutionException, InterruptedException {
-        Firestore db = FirestoreClient.getFirestore();
-        // Specific brand ke andar bhi model name sequence mein rahega
-        Query query = db.collection(COLLECTION_NAME)
-                .whereEqualTo("brand", brand)
-                .orderBy("name");
-
-        ApiFuture<QuerySnapshot> querySnapshot = query.get();
-        List<Product> productList = new ArrayList<>();
-
-        for (DocumentSnapshot document : querySnapshot.get().getDocuments()) {
+        Firestore db = getDb();
+        ApiFuture<QuerySnapshot> future = db.collection("products").whereEqualTo("brand", brand).get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+        List<Product> products = new ArrayList<>();
+        for (QueryDocumentSnapshot document : documents) {
             Product product = document.toObject(Product.class);
             product.setId(document.getId());
-            productList.add(product);
+            products.add(product);
         }
-        return productList;
+        return products.stream().sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName())).collect(Collectors.toList());
     }
 
-    // 3. Save or Update
-    public String saveProduct(Product product) throws ExecutionException, InterruptedException {
-        Firestore db = FirestoreClient.getFirestore();
+    public void saveProduct(Product product) throws ExecutionException, InterruptedException {
+        Firestore db = getDb();
         if (product.getId() == null || product.getId().isEmpty()) {
-            DocumentReference docRef = db.collection(COLLECTION_NAME).document();
-            product.setId(docRef.getId());
-            docRef.set(product).get();
-            return docRef.getId();
+            db.collection("products").add(product);
         } else {
-            db.collection(COLLECTION_NAME).document(product.getId()).set(product).get();
-            return product.getId();
+            db.collection("products").document(product.getId()).set(product);
         }
     }
 
-    // 4. Get by ID
     public Product getProductById(String id) throws ExecutionException, InterruptedException {
-        Firestore db = FirestoreClient.getFirestore();
-        DocumentSnapshot document = db.collection(COLLECTION_NAME).document(id).get().get();
-        if (document.exists()) {
-            Product product = document.toObject(Product.class);
-            product.setId(document.getId());
-            return product;
-        }
-        return null;
+        Firestore db = getDb();
+        DocumentSnapshot doc = db.collection("products").document(id).get().get();
+        return doc.exists() ? doc.toObject(Product.class) : null;
     }
 
-    // 5. Delete
     public void deleteProduct(String id) {
-        Firestore db = FirestoreClient.getFirestore();
-        db.collection(COLLECTION_NAME).document(id).delete();
+        getDb().collection("products").document(id).delete();
     }
 }

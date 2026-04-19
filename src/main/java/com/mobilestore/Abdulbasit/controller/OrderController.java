@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Controller
 public class OrderController {
@@ -28,7 +28,7 @@ public class OrderController {
 
     @GetMapping("/checkout")
     public String showCheckoutPage(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("loggedInUser");
+        User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         try {
@@ -38,12 +38,13 @@ public class OrderController {
                     .sum();
 
             model.addAttribute("cartItems", cartItems);
-            model.addAttribute("total", total);
-            model.addAttribute("user", user); // User name display ke liye
+            // PROBLEM 1 FIX: Variable name exactly 'totalPrice' rakha hai jo image mein missing tha
+            model.addAttribute("totalPrice", total);
+            model.addAttribute("user", user);
             return "checkout";
         } catch (Exception e) {
             e.printStackTrace();
-            return "error";
+            return "redirect:/cart?error=true";
         }
     }
 
@@ -53,19 +54,20 @@ public class OrderController {
                              @RequestParam String address,
                              @RequestParam String city,
                              @RequestParam String phone) {
-        User user = (User) session.getAttribute("loggedInUser");
+        User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         try {
-            // 1. Calculate Total from Cart
             List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
+            if (cartItems.isEmpty()) return "redirect:/";
+
             double total = cartItems.stream()
                     .mapToDouble(item -> Double.parseDouble(item[2].toString()))
                     .sum();
 
-            // 2. Create Order Object (Professional Mapping)
+            // 1. Save Order Details
             Order order = new Order();
-            order.setId(UUID.randomUUID().toString()); // Generate Unique ID
+            order.setId(UUID.randomUUID().toString());
             order.setCustomerName(fullName);
             order.setEmail(user.getEmail());
             order.setAddress(address + ", " + city);
@@ -74,28 +76,29 @@ public class OrderController {
             order.setStatus("Pending");
             order.setOrderDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 
-            // 3. Save to Firestore (Problem 1, 4, 5 FIX)
             orderService.saveOrder(order);
 
-            // 4. Clear Cart after Order (Problem 2 FIX)
+            // 2. PROBLEM 2 & 3 FIX: Cart Clear with Null Check (Preventing NullPointerException)
             for (Object[] item : cartItems) {
-                cartService.removeFromCart(user.getId(), item[4].toString()); // index 4 is product ID
+                if (item != null && item.length > 4 && item[4] != null) {
+                    cartService.removeFromCart(user.getId(), item[4].toString());
+                }
             }
 
+            // SUCCESS REDIRECT
             return "redirect:/order-success";
         } catch (Exception e) {
             e.printStackTrace();
-            return "error";
+            return "redirect:/checkout?error=true";
         }
     }
 
     @GetMapping("/my-orders")
     public String showMyOrders(HttpSession session, Model model) {
-        try {
-            User user = (User) session.getAttribute("loggedInUser");
-            if (user == null) return "redirect:/login";
+        User user = (User) session.getAttribute("user");
+        if (user == null) return "redirect:/login";
 
-            // Problem 1 FIX: Get all orders and filter by user email
+        try {
             List<Order> allOrders = orderService.getAllOrders();
             List<Order> userOrders = allOrders.stream()
                     .filter(o -> o.getEmail() != null && o.getEmail().equals(user.getEmail()))
@@ -105,13 +108,12 @@ public class OrderController {
             model.addAttribute("user", user);
             return "my_orders";
         } catch (Exception e) {
-            e.printStackTrace();
-            return "error";
+            return "redirect:/?error=true";
         }
     }
 
     @GetMapping("/order-success")
     public String orderSuccess() {
-        return "order_success";
+        return "order_success"; // matches your order_success.html
     }
 }
