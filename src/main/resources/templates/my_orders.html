@@ -12,6 +12,7 @@
             <thead class="table-dark">
             <tr>
                 <th>Order ID</th>
+                <th>Product Details</th>
                 <th>Total Amount</th>
                 <th>Status</th>
             </tr>
@@ -19,9 +20,16 @@
             <tbody>
             <tr th:each="o : ${orders}">
                 <td th:text="'#' + ${o.id}"></td>
+                <td th:text="${o.name}"></td>
                 <td class="fw-bold text-success" th:text="'₹' + ${o.totalAmount}"></td>
                 <td>
-                    <span class="badge bg-info text-dark" th:text="${o.status}"></span>
+                    <span class="badge"
+                          th:classappend="${o.status == 'Pending' ? 'bg-warning text-dark' :
+                                           (o.status == 'Shipping' ? 'bg-primary' :
+                                           (o.status == 'Delivered' ? 'bg-success' :
+                                           (o.status == 'Canceled' ? 'bg-danger' : 'bg-secondary')))}"
+                          th:text="${o.status}">
+                    </span>
                 </td>
             </tr>
             </tbody>

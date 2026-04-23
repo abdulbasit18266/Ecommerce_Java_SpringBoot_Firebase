@@ -3,12 +3,11 @@ package com.mobilestore.Abdulbasit.controller;
 import com.mobilestore.Abdulbasit.entity.Order;
 import com.mobilestore.Abdulbasit.entity.Product;
 import com.mobilestore.Abdulbasit.service.OrderService;
-import com.mobilestore.Abdulbasit.service.ProductService;
+import com.mobilestore.Abdulbasit.service.ProductFirestoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,86 +15,62 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin")
 public class AdminController {
 
-    @Autowired
-    private ProductService productService;
+    @Autowired private ProductFirestoreService productService;
+    @Autowired private OrderService orderService;
 
-    @Autowired
-    private OrderService orderService;
-
-    // ✅ FIXED: Added 'throws Exception' to handle Firestore async calls
     @GetMapping("/dashboard")
-    public String adminDashboard(Model model) throws Exception {
-        List<Product> products = productService.getAllProducts();
-        List<Order> orders = orderService.getAllOrders();
+    public String adminDashboard(Model model) {
+        try {
+            List<Product> products = productService.getAllProducts();
+            model.addAttribute("totalProducts", products != null ? products.size() : 0);
+            model.addAttribute("products", products);
 
-        if (products == null) products = List.of();
-        if (orders == null) orders = List.of();
+            List<Order> orders = orderService.getAllOrders();
+            model.addAttribute("totalOrders", orders != null ? orders.size() : 0);
+            model.addAttribute("orders", orders);
 
-        long appleCount = products.stream()
-                .filter(p -> p.getBrand() != null && (p.getBrand().equalsIgnoreCase("Apple") || p.getBrand().contains("iPhone")))
-                .count();
-        long samsungCount = products.stream()
-                .filter(p -> p.getBrand() != null && (p.getBrand().equalsIgnoreCase("Samsung") || p.getBrand().contains("Galaxy")))
-                .count();
-        long otherCount = products.size() - (appleCount + samsungCount);
+            // ✅ FIX: Revenue Calculation (Saare orders ka sum)
+            double revenue = 0;
+            if (orders != null) {
+                revenue = orders.stream()
+                        .filter(o -> o.getTotalAmount() != null)
+                        .mapToDouble(Order::getTotalAmount)
+                        .sum();
+            }
+            model.addAttribute("totalRevenue", revenue);
 
-        double totalRevenue = orders.stream().mapToDouble(Order::getTotalAmount).sum();
+            // ✅ FIX: Graph Data (Order amounts ki list)
+            List<Double> orderAmounts = (orders != null) ?
+                    orders.stream().map(Order::getTotalAmount).collect(Collectors.toList()) : List.of();
+            model.addAttribute("orderAmounts", orderAmounts);
 
-        List<Double> orderAmounts = orders.stream()
-                .map(Order::getTotalAmount)
-                .collect(Collectors.toList());
+            // ✅ FIX: Brand Split (Doughnut Chart ke liye)
+            long apple = (products != null) ? products.stream().filter(p -> p.getBrand().equalsIgnoreCase("Apple")).count() : 0;
+            long samsung = (products != null) ? products.stream().filter(p -> p.getBrand().equalsIgnoreCase("Samsung")).count() : 0;
+            long others = (products != null) ? (products.size() - (apple + samsung)) : 0;
 
-        model.addAttribute("products", products);
-        model.addAttribute("totalProducts", products.size());
-        model.addAttribute("totalOrders", orders.size());
-        model.addAttribute("totalRevenue", totalRevenue);
-        model.addAttribute("orderAmounts", orderAmounts);
+            model.addAttribute("appleCount", apple);
+            model.addAttribute("samsungCount", samsung);
+            model.addAttribute("otherCount", others);
 
-        model.addAttribute("appleCount", appleCount);
-        model.addAttribute("samsungCount", samsungCount);
-        model.addAttribute("otherCount", otherCount);
-
-        return "admin_dashboard";
+            return "admin_dashboard";
+        } catch (Exception e) { return "error"; }
     }
 
-    @GetMapping("/add-product")
-    public String addProductPage() {
-        return "add_product";
-    }
-
-    @PostMapping("/save-product")
-    public String saveProduct(@ModelAttribute Product product) {
-        productService.saveProduct(product);
-        return "redirect:/admin/dashboard";
-    }
-
-    @GetMapping("/edit-product/{id}")
-    public String editProductPage(@PathVariable String id, Model model) {
-        Product product = productService.getProductById(id);
-        if (product != null) {
-            model.addAttribute("product", product);
-            return "edit_product";
-        }
-        return "redirect:/admin/dashboard";
-    }
-
-    @PostMapping("/update-product")
-    public String updateProduct(@ModelAttribute Product product) {
-        productService.saveProduct(product);
-        return "redirect:/admin/dashboard";
-    }
-
-    @GetMapping("/delete-product/{id}")
-    public String deleteProduct(@PathVariable String id) {
-        productService.deleteProduct(id);
-        return "redirect:/admin/dashboard";
-    }
-
-    // ✅ FIXED: Added 'throws Exception' here as well
     @GetMapping("/orders")
-    public String viewOrders(Model model) throws Exception {
-        List<Order> orders = orderService.getAllOrders();
-        model.addAttribute("orders", orders);
+    public String viewOrders(Model model) {
+        model.addAttribute("orders", orderService.getAllOrders());
         return "admin_orders";
+    }
+
+    @PostMapping("/update-order-status")
+    @ResponseBody
+    public String updateOrderStatus(@RequestParam String orderId, @RequestParam String status) {
+        try {
+            orderService.updateStatus(orderId, status);
+            return "Success";
+        } catch (Exception e) {
+            return "Error: " + e.getMessage();
+        }
     }
 }

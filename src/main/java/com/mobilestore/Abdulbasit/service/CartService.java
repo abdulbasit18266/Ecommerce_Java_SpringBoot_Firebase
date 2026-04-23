@@ -1,12 +1,10 @@
 package com.mobilestore.Abdulbasit.service;
 
-import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import com.mobilestore.Abdulbasit.entity.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -15,45 +13,62 @@ import java.util.concurrent.ExecutionException;
 public class CartService {
 
     @Autowired
-    private ProductFirestoreService productFirestoreService; // CORRECTED: Injected service
-
+    private ProductFirestoreService productFirestoreService;
     private static final String COLLECTION_NAME = "carts";
+
+    // ✅ Naya Method: Order ke baad cart khali karne ke liye
+    public void clearCart(String userId) throws ExecutionException, InterruptedException {
+        Firestore db = FirestoreClient.getFirestore();
+        CollectionReference items = db.collection(COLLECTION_NAME).document(userId).collection("items");
+        List<QueryDocumentSnapshot> documents = items.get().get().getDocuments();
+        for (QueryDocumentSnapshot doc : documents) {
+            doc.getReference().delete();
+        }
+    }
 
     public void addToCart(String userId, String productId) throws ExecutionException, InterruptedException {
         Firestore db = FirestoreClient.getFirestore();
-        DocumentReference cartRef = db.collection(COLLECTION_NAME).document(userId)
-                .collection("items").document(productId);
+        DocumentReference itemRef = db.collection(COLLECTION_NAME).document(userId).collection("items").document(productId);
+        DocumentSnapshot snap = itemRef.get().get();
 
-        CartItem item = new CartItem(productId, 1);
-        cartRef.set(item).get();
+        if (snap.exists()) {
+            long currentQty = snap.getLong("quantity");
+            itemRef.update("quantity", currentQty + 1).get();
+        } else {
+            itemRef.set(new CartItem(productId, 1)).get();
+        }
+    }
+
+    public void updateQuantity(String userId, String productId, int change) throws Exception {
+        Firestore db = FirestoreClient.getFirestore();
+        DocumentReference itemRef = db.collection(COLLECTION_NAME).document(userId).collection("items").document(productId);
+        DocumentSnapshot snap = itemRef.get().get();
+        if (snap.exists()) {
+            long newQty = snap.getLong("quantity") + change;
+            if (newQty > 0) itemRef.update("quantity", newQty).get();
+            else removeFromCart(userId, productId);
+        }
     }
 
     public List<Object[]> getCartWithProducts(String userId) throws ExecutionException, InterruptedException {
+        if (userId == null || userId.isEmpty()) return new ArrayList<>();
         Firestore db = FirestoreClient.getFirestore();
-        CollectionReference itemsRef = db.collection(COLLECTION_NAME).document(userId).collection("items");
-
-        ApiFuture<QuerySnapshot> future = itemsRef.get();
-        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-
+        List<QueryDocumentSnapshot> docs = db.collection(COLLECTION_NAME).document(userId).collection("items").get().get().getDocuments();
         List<Object[]> cartDetails = new ArrayList<>();
 
-        for (QueryDocumentSnapshot doc : documents) {
-            String productId = doc.getString("productId");
-            // Product fetch using correct service name
-            Product p = productFirestoreService.getProductById(productId);
-
+        for (QueryDocumentSnapshot doc : docs) {
+            String pId = doc.getString("productId");
+            int qty = doc.getLong("quantity").intValue();
+            Product p = productFirestoreService.getProductById(pId);
             if (p != null) {
-                // Mapping: 0:Name, 1:Brand, 2:Price, 3:Image, 4:ID
-                cartDetails.add(new Object[]{p.getName(), p.getBrand(), p.getPrice(), p.getImage(), p.getId()});
+                cartDetails.add(new Object[]{pId, p.getName(), p.getBrand(), p.getPrice(), p.getImage(), qty});
             }
         }
         return cartDetails;
     }
 
     public void removeFromCart(String userId, String productId) throws ExecutionException, InterruptedException {
-        Firestore db = FirestoreClient.getFirestore();
-        db.collection(COLLECTION_NAME).document(userId)
-                .collection("items").document(productId).delete().get();
+        FirestoreClient.getFirestore().collection(COLLECTION_NAME).document(userId).collection("items").document(productId).delete().get();
     }
 
     public static class CartItem {

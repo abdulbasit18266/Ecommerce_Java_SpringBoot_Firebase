@@ -17,22 +17,27 @@ public class ProductFirestoreService {
         return FirestoreClient.getFirestore();
     }
 
+    // ProductFirestoreService.java ke andar is method ko update karein
     public List<Product> getAllProducts() throws ExecutionException, InterruptedException {
         Firestore db = getDb();
+        // Brand ke hisaab se sort karke data uthayenge
         ApiFuture<QuerySnapshot> future = db.collection("products")
                 .orderBy("brand", Query.Direction.ASCENDING)
-                .orderBy("name", Query.Direction.ASCENDING)
                 .get();
+
         List<QueryDocumentSnapshot> documents = future.get().getDocuments();
         List<Product> products = new ArrayList<>();
         for (QueryDocumentSnapshot document : documents) {
             Product product = document.toObject(Product.class);
-            product.setId(document.getId());
-            products.add(product);
+            if (product != null) {
+                product.setId(document.getId());
+                products.add(product);
+            }
         }
         return products;
     }
 
+    // Is method ka naam aur logic check karein (Line 19 error fix karne ke liye)
     public List<Product> getProductsByBrand(String brand) throws ExecutionException, InterruptedException {
         Firestore db = getDb();
         ApiFuture<QuerySnapshot> future = db.collection("products").whereEqualTo("brand", brand).get();
@@ -40,10 +45,12 @@ public class ProductFirestoreService {
         List<Product> products = new ArrayList<>();
         for (QueryDocumentSnapshot document : documents) {
             Product product = document.toObject(Product.class);
-            product.setId(document.getId());
-            products.add(product);
+            if (product != null) {
+                product.setId(document.getId());
+                products.add(product);
+            }
         }
-        return products.stream().sorted((p1, p2) -> p1.getName().compareToIgnoreCase(p2.getName())).collect(Collectors.toList());
+        return products;
     }
 
     public void saveProduct(Product product) throws ExecutionException, InterruptedException {
@@ -56,12 +63,19 @@ public class ProductFirestoreService {
     }
 
     public Product getProductById(String id) throws ExecutionException, InterruptedException {
-        Firestore db = getDb();
-        DocumentSnapshot doc = db.collection("products").document(id).get().get();
-        return doc.exists() ? doc.toObject(Product.class) : null;
+        if (id == null || id.isEmpty()) return null;
+        DocumentSnapshot doc = getDb().collection("products").document(id).get().get();
+        if (doc.exists()) {
+            Product p = doc.toObject(Product.class);
+            if (p != null) p.setId(doc.getId());
+            return p;
+        }
+        return null;
     }
 
     public void deleteProduct(String id) {
-        getDb().collection("products").document(id).delete();
+        if (id != null && !id.isEmpty()) {
+            getDb().collection("products").document(id).delete();
+        }
     }
 }

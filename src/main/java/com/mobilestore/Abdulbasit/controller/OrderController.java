@@ -4,88 +4,49 @@ import com.mobilestore.Abdulbasit.entity.Order;
 import com.mobilestore.Abdulbasit.entity.User;
 import com.mobilestore.Abdulbasit.service.OrderService;
 import com.mobilestore.Abdulbasit.service.CartService;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
+import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
-import java.util.UUID;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @Controller
 public class OrderController {
 
-    @Autowired
-    private OrderService orderService;
-
-    @Autowired
-    private CartService cartService;
-
-    @GetMapping("/checkout")
-    public String showCheckoutPage(HttpSession session, Model model) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) return "redirect:/login";
-
-        try {
-            List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
-            double total = cartItems.stream()
-                    .mapToDouble(item -> Double.parseDouble(item[2].toString()))
-                    .sum();
-
-            model.addAttribute("cartItems", cartItems);
-            // PROBLEM 1 FIX: Variable name exactly 'totalPrice' rakha hai jo image mein missing tha
-            model.addAttribute("totalPrice", total);
-            model.addAttribute("user", user);
-            return "checkout";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "redirect:/cart?error=true";
-        }
-    }
+    @Autowired private OrderService orderService;
+    @Autowired private CartService cartService;
 
     @PostMapping("/place-order")
-    public String placeOrder(HttpSession session,
-                             @RequestParam String fullName,
-                             @RequestParam String address,
-                             @RequestParam String city,
-                             @RequestParam String phone) {
+    public String placeOrder(@ModelAttribute Order order, HttpSession session) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         try {
-            List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
-            if (cartItems.isEmpty()) return "redirect:/";
-
-            double total = cartItems.stream()
-                    .mapToDouble(item -> Double.parseDouble(item[2].toString()))
-                    .sum();
-
-            // 1. Save Order Details
-            Order order = new Order();
-            order.setId(UUID.randomUUID().toString());
-            order.setCustomerName(fullName);
             order.setEmail(user.getEmail());
-            order.setAddress(address + ", " + city);
-            order.setPhoneNumber(phone);
-            order.setTotalAmount(total);
-            order.setStatus("Pending");
-            order.setOrderDate(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            order.setCustomerName(user.getName());
 
+            List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
+
+            // Products name mapping
+            String productNames = cartItems.stream()
+                    .map(item -> item[1].toString() + " (x" + item[5].toString() + ")")
+                    .collect(Collectors.joining(", "));
+            order.setName(productNames);
+
+            // Total Amount calculation
+            double total = cartItems.stream()
+                    .mapToDouble(item -> Double.parseDouble(item[3].toString()) * Integer.parseInt(item[5].toString()))
+                    .sum();
+            order.setTotalAmount(total);
+
+            // 1. Order save karo
             orderService.saveOrder(order);
 
-            // 2. PROBLEM 2 & 3 FIX: Cart Clear with Null Check (Preventing NullPointerException)
-            for (Object[] item : cartItems) {
-                if (item != null && item.length > 4 && item[4] != null) {
-                    cartService.removeFromCart(user.getId(), item[4].toString());
-                }
-            }
+            // 2. ✅ FIX: Cart empty karo successfully order ke baad
+            cartService.clearCart(user.getId());
 
-            // SUCCESS REDIRECT
             return "redirect:/order-success";
         } catch (Exception e) {
             e.printStackTrace();
@@ -93,27 +54,15 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/my-orders")
-    public String showMyOrders(HttpSession session, Model model) {
+    @GetMapping("/user/my-orders")
+    public String viewMyOrders(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
-
-        try {
-            List<Order> allOrders = orderService.getAllOrders();
-            List<Order> userOrders = allOrders.stream()
-                    .filter(o -> o.getEmail() != null && o.getEmail().equals(user.getEmail()))
-                    .toList();
-
-            model.addAttribute("orders", userOrders);
-            model.addAttribute("user", user);
-            return "my_orders";
-        } catch (Exception e) {
-            return "redirect:/?error=true";
-        }
+        List<Order> userOrders = orderService.getOrdersByUserEmail(user.getEmail());
+        model.addAttribute("orders", userOrders);
+        return "my_orders";
     }
 
     @GetMapping("/order-success")
-    public String orderSuccess() {
-        return "order_success"; // matches your order_success.html
-    }
+    public String orderSuccess() { return "order_success"; }
 }
