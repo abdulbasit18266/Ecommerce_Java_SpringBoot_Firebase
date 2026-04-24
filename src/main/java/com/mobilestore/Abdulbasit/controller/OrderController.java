@@ -29,23 +29,24 @@ public class OrderController {
 
             List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
 
-            // Products name mapping
             String productNames = cartItems.stream()
                     .map(item -> item[1].toString() + " (x" + item[5].toString() + ")")
                     .collect(Collectors.joining(", "));
             order.setName(productNames);
 
-            // Total Amount calculation
             double total = cartItems.stream()
                     .mapToDouble(item -> Double.parseDouble(item[3].toString()) * Integer.parseInt(item[5].toString()))
                     .sum();
             order.setTotalAmount(total);
 
-            // 1. Order save karo
+            // 1. Order save
             orderService.saveOrder(order);
 
-            // 2. ✅ FIX: Cart empty karo successfully order ke baad
+            // 2. Clear Firebase Cart
             cartService.clearCart(user.getId());
+
+            // 3. ✅ FINAL FIX: Clear session persistence
+            session.removeAttribute("pendingProductId");
 
             return "redirect:/order-success";
         } catch (Exception e) {

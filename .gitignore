@@ -2,4 +2,5 @@
 MAlonzo/**
 src/main/resources/serviceAccountKey.json
 target/classes/serviceAccountKey.json
+src/main/resources/serviceAccountKey.json
 

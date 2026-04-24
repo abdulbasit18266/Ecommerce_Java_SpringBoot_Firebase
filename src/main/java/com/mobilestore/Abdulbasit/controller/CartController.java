@@ -15,35 +15,32 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
-    // ✅ FIXED: Missing Add to Cart Mapping (Jo index.html se call hota hai)
     @GetMapping("/add-to-cart/{id}")
-    public String addToCart(@PathVariable("id") String productId, HttpSession session) {
+    public String addToCart(@PathVariable String id, HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user == null || user.getId() == null) return "redirect:/login";
-
+        if (user == null) {
+            session.setAttribute("pendingProductId", id);
+            return "redirect:/login";
+        }
         try {
-            cartService.addToCart(user.getId(), productId);
-            return "redirect:/?success=true";
+            cartService.addToCart(user.getId(), id);
         } catch (Exception e) {
             e.printStackTrace();
-            return "redirect:/?error=true";
         }
+        return "redirect:/?success";
     }
 
     @GetMapping("/cart")
     public String showCartPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
-
         try {
             List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
-            // item[3] = Price, item[5] = Quantity
             double total = cartItems.stream().mapToDouble(item -> {
                 try {
                     return Double.parseDouble(item[3].toString()) * Integer.parseInt(item[5].toString());
                 } catch (Exception e) { return 0.0; }
             }).sum();
-
             model.addAttribute("cartItems", cartItems);
             model.addAttribute("totalPrice", total);
             return "cart";

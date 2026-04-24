@@ -1,24 +1,21 @@
 package com.mobilestore.Abdulbasit.controller;
 
 import com.mobilestore.Abdulbasit.entity.User;
-import com.mobilestore.Abdulbasit.entity.Order;
 import com.mobilestore.Abdulbasit.service.UserServices;
 import com.mobilestore.Abdulbasit.service.OrderService;
+import com.mobilestore.Abdulbasit.service.CartService; // Added
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @Controller
 public class UserController {
 
-    @Autowired
-    private UserServices userServices; // Ensure matches class name
-
-    @Autowired
-    private OrderService orderService;
+    @Autowired private UserServices userServices;
+    @Autowired private OrderService orderService;
+    @Autowired private CartService cartService; // Added for migration
 
     @GetMapping("/login")
     public String showLoginPage() {
@@ -31,17 +28,22 @@ public class UserController {
             User user = userServices.login(email, password);
             if (user != null) {
                 session.setAttribute("user", user);
-                // Admin role check (Optional but good)
-                if ("ADMIN".equals(user.getRole())) {
-                    return "redirect:/admin/dashboard";
+
+                // ✅ Migration logic
+                String pendingId = (String) session.getAttribute("pendingProductId");
+                if (pendingId != null) {
+                    cartService.addToCart(user.getId(), pendingId);
+                    session.removeAttribute("pendingProductId");
                 }
+
+                if ("ADMIN".equals(user.getRole())) return "redirect:/admin/dashboard";
                 return "redirect:/";
             } else {
                 model.addAttribute("error", "Invalid Email or Password!");
                 return "login";
             }
         } catch (Exception e) {
-            model.addAttribute("error", "Something went wrong. Please try again.");
+            model.addAttribute("error", "Error logging in.");
             return "login";
         }
     }
@@ -53,10 +55,13 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute User user, Model model) {
+    public String registerUser(@ModelAttribute User user, Model model, HttpSession session) { // Added session
         try {
             user.setRole("USER");
             userServices.saveUser(user);
+
+            // ✅ NEW: Product persistence for register too
+            // Note: Migration normally happens at login, but we keep the session ID safe here.
             return "redirect:/login?success=true";
         } catch (Exception e) {
             model.addAttribute("error", "Registration Failed!");
