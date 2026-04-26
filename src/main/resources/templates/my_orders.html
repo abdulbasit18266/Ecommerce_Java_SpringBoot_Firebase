@@ -1,41 +1,138 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>My Orders | Mobile Store</title>
+    <meta charset="UTF-8">
+    <title>My Orders - Mobile Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Global Theme Background */
+        body {
+            background: linear-gradient(135deg, #E5E5DE 0%, #F5F5F0 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1A1A1A;
+            min-height: 100vh;
+        }
+
+        .container { padding-top: 60px; padding-bottom: 80px; }
+
+        /* Typography */
+        .page-title { font-weight: 800; font-size: 2.5rem; letter-spacing: -1.5px; margin-bottom: 30px; }
+
+        /* Order Card Styling */
+        .order-card {
+            background: #ffffff;
+            border-radius: 30px;
+            border: 1px solid rgba(0,0,0,0.03);
+            padding: 30px;
+            margin-bottom: 25px;
+            transition: 0.3s;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+        }
+        .order-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.08);
+        }
+
+        /* Header of the card */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #EAEAEA;
+            margin-bottom: 20px;
+        }
+
+        .order-id { font-weight: 800; color: #A89880; font-size: 0.9rem; letter-spacing: 1px; }
+
+        /* Status Badges - Custom Muted Colors */
+        .status-badge {
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .status-pending { background: #FFF9E6; color: #D4A017; }
+        .status-shipping { background: #E6F0FF; color: #0056B3; }
+        .status-delivered { background: #E6F4EA; color: #1E7E34; }
+        .status-canceled { background: #FFE6E6; color: #D64545; }
+        .status-default { background: #F5F5F0; color: #666; }
+
+        /* Table-like row inside card for details */
+        .detail-label { font-size: 0.75rem; font-weight: 700; color: #A89880; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .detail-value { font-weight: 600; font-size: 1.05rem; }
+
+        /* Buttons */
+        .btn-premium-outline {
+            border: 1.5px solid #1A1A1A;
+            color: #1A1A1A;
+            border-radius: 15px;
+            padding: 12px 30px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+            display: inline-block;
+        }
+        .btn-premium-outline:hover { background: #1A1A1A; color: #fff; }
+    </style>
 </head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="card shadow p-4" style="border-radius: 15px;">
-        <h2 class="mb-4">Your Orders 📦</h2>
-        <table class="table table-hover">
-            <thead class="table-dark">
-            <tr>
-                <th>Order ID</th>
-                <th>Product Details</th>
-                <th>Total Amount</th>
-                <th>Status</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="o : ${orders}">
-                <td th:text="'#' + ${o.id}"></td>
-                <td th:text="${o.name}"></td>
-                <td class="fw-bold text-success" th:text="'₹' + ${o.totalAmount}"></td>
-                <td>
-                    <span class="badge"
-                          th:classappend="${o.status == 'Pending' ? 'bg-warning text-dark' :
-                                           (o.status == 'Shipping' ? 'bg-primary' :
-                                           (o.status == 'Delivered' ? 'bg-success' :
-                                           (o.status == 'Canceled' ? 'bg-danger' : 'bg-secondary')))}"
-                          th:text="${o.status}">
-                    </span>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-        <a href="/" class="btn btn-outline-primary mt-3">Back to Home</a>
+<body>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="page-title">Order History.</h2>
+            <p class="text-muted mb-0">Track and manage your premium acquisitions.</p>
+        </div>
+        <a href="/" class="btn-premium-outline">
+            <i class="bi bi-house-door me-2"></i>Back to Home
+        </a>
+    </div>
+
+    <div th:if="${#lists.isEmpty(orders)}" class="text-center py-5 bg-white rounded-5 shadow-sm">
+        <i class="bi bi-box-seam text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+        <h4 class="mt-3 fw-bold">No orders found yet.</h4>
+        <p class="text-muted">Start your journey with our latest collection.</p>
+        <a href="/" class="btn-premium-outline mt-3">Browse Collection</a>
+    </div>
+
+    <div th:each="o : ${orders}" class="order-card">
+        <div class="order-header">
+            <span class="order-id" th:text="'ORDER #' + ${o.id}">ORDER #ID</span>
+            <span class="status-badge"
+                  th:classappend="${o.status == 'Pending' ? 'status-pending' :
+                                   (o.status == 'Shipping' ? 'status-shipping' :
+                                   (o.status == 'Delivered' ? 'status-delivered' :
+                                   (o.status == 'Canceled' ? 'status-canceled' : 'status-default')))}"
+                  th:text="${o.status}">
+            </span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <div class="detail-label">Product Details</div>
+                <div class="detail-value" th:text="${o.name}">Device Name</div>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="detail-label">Contact Number</div>
+                <div class="detail-value" th:text="${o.phoneNumber}">+91 0000000000</div>
+            </div>
+            <div class="col-md-3 mb-3 mb-md-0">
+                <div class="detail-label">Total Investment</div>
+                <div class="detail-value fw-bold text-dark" th:text="'₹' + ${o.totalAmount}">₹0.0</div>
+            </div>
+            <div class="col-md-2 text-md-end d-flex align-items-end justify-content-md-end">
+                <i class="bi bi-chevron-right text-muted"></i>
+            </div>
+        </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

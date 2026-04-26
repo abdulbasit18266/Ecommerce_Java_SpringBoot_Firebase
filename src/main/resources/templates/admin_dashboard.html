@@ -1,84 +1,168 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Admin Dashboard | Mobile Store</title>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Mobile Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        .card-stats { transition: 0.3s; border-radius: 15px; border: none; }
-        .card-stats:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
-        .chart-container { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        /* Global Theme */
+        body {
+            background: #F9F9F7;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1A1A1A;
+        }
+
+        /* Dark Luxury Navbar */
+        .admin-nav {
+            background: #1A1A1A;
+            padding: 20px 30px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .navbar-brand { letter-spacing: 2px; font-weight: 800; font-size: 1.1rem; }
+
+        /* Stats Cards */
+        .card-stats {
+            border-radius: 25px;
+            border: none;
+            padding: 30px;
+            transition: 0.3s ease;
+            color: white;
+        }
+        .card-stats:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important; }
+
+        .stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.8; font-weight: 700; }
+        .stat-value { font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; }
+
+        .bg-ivory-dark { background: #1A1A1A; }
+        .bg-ivory-tan { background: #A89880; }
+        .bg-ivory-muted { background: #4A4A48; }
+
+        /* Chart Containers */
+        .chart-container {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            border: 1px solid #F0F0EB;
+        }
+
+        /* Table Styling */
+        .inventory-card {
+            background: white;
+            border-radius: 30px;
+            border: none;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+        .table thead th {
+            background: #F9F9F7;
+            border: none;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            padding: 15px;
+            color: #A89880;
+        }
+        .table tbody td { padding: 18px 15px; border-bottom: 1px solid #F5F5F0; vertical-align: middle; }
+
+        /* Action Buttons */
+        .btn-action { border-radius: 12px; padding: 8px 15px; font-size: 0.85rem; font-weight: 600; transition: 0.3s; }
+        .btn-add { background: #1A1A1A; color: white; border-radius: 15px; padding: 12px 25px; border: none; font-weight: 700; }
+        .btn-add:hover { background: #A89880; color: white; transform: scale(1.05); }
+
+        .btn-edit { background: #F5F5F0; color: #1A1A1A; border: none; }
+        .btn-edit:hover { background: #E5E5DE; }
+
+        .btn-del { background: #FFF0F0; color: #D64545; border: none; }
+        .btn-del:hover { background: #D64545; color: white; }
     </style>
 </head>
-<body class="bg-light">
+<body>
 
-<nav class="navbar navbar-dark bg-dark px-4 shadow-sm">
-    <div>
-        <span class="navbar-brand fw-bold">Admin Panel 🛠️</span>
-        <a href="/admin/orders" class="btn btn-outline-light btn-sm ms-3">Orders 📦</a>
+<nav class="navbar navbar-dark admin-nav mb-5 mx-2">
+    <div class="container-fluid">
+        <span class="navbar-brand"><i class="bi bi-shield-lock me-2"></i>ADMIN PANEL</span>
+        <div class="d-flex gap-2">
+            <a href="/admin/orders" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="bi bi-box me-1"></i> Orders</a>
+            <a href="/" class="btn btn-light btn-sm rounded-pill px-3 text-dark"><i class="bi bi-shop me-1"></i> View Store</a>
+        </div>
     </div>
-    <a href="/" class="btn btn-outline-light btn-sm">Store 🌐</a>
 </nav>
 
-<div class="container mt-4">
-    <div class="row mb-4 text-center">
-        <div class="col-md-4 mb-3">
-            <div class="card bg-primary text-white shadow-sm p-4 card-stats">
-                <h6>Total Products</h6>
-                <h2 class="fw-bold" th:text="${totalProducts}">0</h2>
+<div class="container pb-5">
+    <div class="row mb-5 text-center g-4">
+        <div class="col-md-4">
+            <div class="card card-stats bg-ivory-dark shadow-sm">
+                <div class="stat-label">Total Inventory</div>
+                <div class="stat-value" th:text="${totalProducts}">0</div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-success text-white shadow-sm p-4 card-stats">
-                <h6>Total Orders</h6>
-                <h2 class="fw-bold" th:text="${totalOrders}">0</h2>
+        <div class="col-md-4">
+            <div class="card card-stats bg-ivory-tan shadow-sm">
+                <div class="stat-label">Orders Received</div>
+                <div class="stat-value" th:text="${totalOrders}">0</div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card bg-dark text-white shadow-sm p-4 card-stats">
-                <h6>Revenue Generated</h6>
-                <h2 class="fw-bold">₹<span th:text="${totalRevenue}">0.0</span></h2>
+        <div class="col-md-4">
+            <div class="card card-stats bg-ivory-muted shadow-sm">
+                <div class="stat-label">Revenue Generated</div>
+                <div class="stat-value">₹<span th:text="${totalRevenue}">0.0</span></div>
             </div>
         </div>
     </div>
 
-    <div class="row mb-5">
-        <div class="col-md-8 mb-4">
-            <div class="chart-container">
-                <h5 class="fw-bold mb-3">Sales Performance (Per Order)</h5>
-                <canvas id="salesChart" height="120"></canvas>
+    <div class="row mb-5 g-4">
+        <div class="col-md-8">
+            <div class="chart-container h-100">
+                <h6 class="fw-bold text-uppercase mb-4 small" style="letter-spacing: 1px;">Sales Insights</h6>
+                <canvas id="salesChart" height="130"></canvas>
             </div>
         </div>
-        <div class="col-md-4 mb-4">
-            <div class="chart-container text-center">
-                <h5 class="fw-bold mb-3">Inventory Split</h5>
+        <div class="col-md-4">
+            <div class="chart-container h-100 text-center">
+                <h6 class="fw-bold text-uppercase mb-4 small" style="letter-spacing: 1px;">Stock Distribution</h6>
                 <canvas id="brandChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold">Product Inventory</h3>
-        <a href="/admin/add-product" class="btn btn-primary fw-bold">+ Add New Mobile</a>
+    <div class="d-flex justify-content-between align-items-end mb-4 px-2">
+        <div>
+            <h3 class="fw-bold mb-1">Stock Management</h3>
+            <p class="text-muted small mb-0">Update and manage your device catalog.</p>
+        </div>
+        <a href="/admin/add-product" class="btn btn-add shadow-sm">+ Add Product</a>
     </div>
 
-    <div class="card shadow-sm border-0 p-3 rounded-3 mb-5">
+    <div class="inventory-card">
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+            <table class="table align-middle">
+                <thead>
                 <tr>
-                    <th>ID</th><th>Name</th><th>Brand</th><th>Price</th><th class="text-center">Actions</th>
+                    <th>Ref ID</th>
+                    <th>Model Name</th>
+                    <th>Brand</th>
+                    <th>Price</th>
+                    <th class="text-center">Manage</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="p : ${products}">
-                    <td th:text="${p.id}"></td>
+                    <td class="text-muted small" th:text="'#00' + ${p.id}"></td>
                     <td class="fw-bold" th:text="${p.name}"></td>
-                    <td th:text="${p.brand}"></td>
-                    <td class="text-success fw-bold" th:text="'₹' + ${p.price}"></td>
+                    <td><span class="badge bg-light text-dark rounded-pill px-3 py-2" th:text="${p.brand}"></span></td>
+                    <td class="fw-bold" th:text="'₹' + ${p.price}"></td>
                     <td class="text-center">
-                        <a th:href="@{'/admin/edit-product/' + ${p.id}}" class="btn btn-sm btn-warning">Edit</a>
-                        <a th:href="@{'/admin/delete-product/' + ${p.id}}" class="btn btn-sm btn-danger" onclick="return confirm('Delete?')">Del</a>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a th:href="@{'/admin/edit-product/' + ${p.id}}" class="btn btn-action btn-edit">Edit</a>
+                            <a th:href="@{'/admin/delete-product/' + ${p.id}}" class="btn btn-action btn-del" onclick="return confirm('Archive this product?')">Delete</a>
+                        </div>
                     </td>
                 </tr>
                 </tbody>
@@ -88,33 +172,40 @@
 </div>
 
 <script th:inline="javascript">
-    // ✅ Data ab Controller se aayega
+    // Data Extraction
     const orderData = [[${orderAmounts}]] || [];
-    const labels = orderData.map((_, i) => 'Order ' + (i + 1));
+    const labels = orderData.map((_, i) => 'O' + (i + 1));
 
+    // Sales Chart (Line)
     const ctx1 = document.getElementById('salesChart').getContext('2d');
     new Chart(ctx1, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Order Value (₹)',
+                label: 'Value',
                 data: orderData,
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderColor: '#1A1A1A',
+                backgroundColor: 'rgba(168, 152, 128, 0.1)',
                 fill: true,
-                borderWidth: 4,
+                borderWidth: 3,
                 tension: 0.4,
-                pointBackgroundColor: '#28a745',
-                pointRadius: 6
+                pointBackgroundColor: '#A89880',
+                pointRadius: 4,
+                pointHoverRadius: 7
             }]
         },
         options: {
             responsive: true,
-            plugins: { legend: { display: false } }
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { display: false }, border: { display: false } },
+                x: { grid: { display: false }, border: { display: false } }
+            }
         }
     });
 
+    // Brand Chart (Doughnut)
     const ctx2 = document.getElementById('brandChart').getContext('2d');
     new Chart(ctx2, {
         type: 'doughnut',
@@ -122,9 +213,13 @@
             labels: ['Apple', 'Samsung', 'Others'],
             datasets: [{
                 data: [ [[${appleCount}]], [[${samsungCount}]], [[${otherCount}]] ],
-                backgroundColor: ['#212529', '#0d6efd', '#adb5bd'],
+                backgroundColor: ['#1A1A1A', '#A89880', '#E5E5DE'],
+                hoverOffset: 10,
                 borderWidth: 0
             }]
+        },
+        options: {
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } } }
         }
     });
 </script>

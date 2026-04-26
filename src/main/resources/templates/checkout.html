@@ -1,40 +1,207 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Checkout</title>
+    <meta charset="UTF-8">
+    <title>Checkout - Mobile Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/css/intlTelInput.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Global Theme */
+        body {
+            background: linear-gradient(135deg, #E5E5DE 0%, #F5F5F0 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #1A1A1A;
+            min-height: 100vh;
+        }
+
+        .checkout-container { padding: 60px 0; }
+
+        /* Titles */
+        .section-title {
+            font-weight: 800;
+            font-size: 1.8rem;
+            letter-spacing: -1px;
+            margin-bottom: 25px;
+        }
+
+        /* Form Styling */
+        .shipping-card {
+            background: #ffffff;
+            border-radius: 35px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .form-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #A89880;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-control-premium {
+            background: #F9F9F7 !important;
+            border: 1px solid #EAEAEA !important;
+            padding: 14px 20px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+
+        .form-control-premium:focus {
+            box-shadow: 0 0 0 4px rgba(168, 152, 128, 0.1);
+            border-color: #A89880 !important;
+            outline: none;
+        }
+
+        /* Summary Sidebar */
+        .summary-card {
+            background: #1A1A1A;
+            color: #ffffff;
+            border-radius: 35px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-item {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Phone Input Fix */
+        .iti { width: 100%; display: block; }
+        .iti__hide { display: none; }
+
+        /* Buttons */
+        .btn-place-order {
+            background: #ffffff;
+            color: #1A1A1A;
+            border: none;
+            border-radius: 18px;
+            padding: 18px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            margin-top: 20px;
+        }
+        .btn-place-order:hover {
+            background: #A89880;
+            color: #ffffff;
+            transform: translateY(-3px);
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: #1A1A1A;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container mt-5">
-    <div class="row">
+<div class="container checkout-container">
+    <a href="/cart" class="back-link">
+        <i class="bi bi-arrow-left me-2"></i> Return to Cart
+    </a>
 
-        <div class="col-md-6">
-            <h3>Shipping Details</h3>
+    <div class="row g-5">
+        <div class="col-md-7">
+            <div class="shipping-card">
+                <h3 class="section-title">Shipping Details</h3>
+                <form th:action="@{/place-order}" method="post" id="checkoutForm">
 
-            <form th:action="@{/place-order}" method="post">
-                <input type="text" name="fullName" class="form-control mb-3" placeholder="Full Name" required>
-                <textarea name="address" class="form-control mb-3" placeholder="Address" required></textarea>
-                <input type="text" name="city" class="form-control mb-3" placeholder="City" required>
-                <input type="text" name="phone" class="form-control mb-3" placeholder="Phone" required>
+                    <div class="mb-3">
+                        <label class="form-label">Receiver's Name</label>
+                        <input type="text" name="customerName" th:value="${session.user.name}"
+                               class="form-control form-control-premium" placeholder="Full Name" required>
+                    </div>
 
-                <button class="btn btn-success w-100">Place Order</button>
-            </form>
+                    <div class="mb-3">
+                        <label class="form-label">Delivery Address</label>
+                        <textarea name="address" class="form-control form-control-premium"
+                                  placeholder="House No, Street, Landmark..." rows="3" required></textarea>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">City</label>
+                            <input type="text" name="city" class="form-control form-control-premium"
+                                   placeholder="Your City" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Contact Number</label>
+                        <input type="tel" id="phoneInput" class="form-control form-control-premium"
+                               th:value="${session.user.phoneNumber}" required>
+                        <input type="hidden" name="phoneNumber" id="fullPhoneNumber">
+                    </div>
+
+                    <div class="mt-4 p-3 rounded-4" style="background: #F5F5F0; border: 1px dashed #A89880;">
+                        <p class="small mb-0 text-muted">
+                            <i class="bi bi-shield-check me-2 text-dark"></i>
+                            Your order will be processed securely. Payment details will be handled in the next step.
+                        </p>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="col-md-6">
-            <h3>Summary</h3>
-            <div th:each="item : ${cartItems}" class="d-flex justify-content-between mb-2">
-                <p>
-                    <span th:text="${item[1]}"></span>
-                    (x<span th:text="${item[5]}"></span>)
-                </p>
-                <p class="fw-bold text-primary" th:text="'₹' + (${item[3]} * ${item[5]})"></p>
+        <div class="col-md-5">
+            <div class="summary-card">
+                <h3 class="section-title text-white">Order Summary</h3>
+
+                <div class="summary-list mb-4">
+                    <div th:each="item : ${cartItems}" class="summary-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0 fw-bold" th:text="${item[1]}">Product Name</h6>
+                            <small style="opacity: 0.6;">Quantity: <span th:text="${item[5]}">1</span></small>
+                        </div>
+                        <span class="fw-bold" th:text="'₹' + (${item[3]} * ${item[5]})"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4 mt-5">
+                    <span class="text-uppercase small fw-bold" style="letter-spacing: 2px; opacity: 0.7;">Total Payable</span>
+                    <h2 class="fw-bold mb-0">₹ <span th:text="${totalPrice}">0.0</span></h2>
+                </div>
+
+                <button type="submit" form="checkoutForm" class="btn btn-place-order w-100 shadow-lg">
+                    Confirm & Place Order <i class="bi bi-arrow-right-short ms-1"></i>
+                </button>
             </div>
-            <hr>
-            <h4 class="fw-bold">Total: ₹ <span th:text="${totalPrice}"></span></h4>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/intlTelInput.min.js"></script>
+<script>
+    const input = document.querySelector("#phoneInput");
+    const fullNumberInput = document.querySelector("#fullPhoneNumber");
+
+    const iti = window.intlTelInput(input, {
+        initialCountry: "in",
+        separateDialCode: true,
+        utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.5.0/build/js/utils.js",
+    });
+
+    document.querySelector("#checkoutForm").addEventListener("submit", function() {
+        fullNumberInput.value = iti.getNumber();
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

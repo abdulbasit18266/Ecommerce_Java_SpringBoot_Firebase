@@ -2,65 +2,128 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Mobile Store</title>
+    <title>The Ivory Coast - Mobile Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body { background: #fdfdfd; font-family: 'Poppins', sans-serif; color: #333; }
-        .hero-section { background: #262626; color: white; padding: 100px 0; border-radius: 0 0 50px 50px; margin-bottom: 50px; }
-        .navbar { padding: 20px 0; }
-        .btn-user-pill { border: 1px solid #007bff; color: #007bff; border-radius: 50px; padding: 8px 20px; font-weight: 600; }
-        .brand-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
-        .product-card { background: white; border-radius: 30px; border: none; padding: 20px; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
-        .product-card:hover { transform: translateY(-10px); box-shadow: 0 15px 35px rgba(0,0,0,0.08); }
-        .alert-floating { position: fixed; top: 20px; right: 20px; z-index: 9999; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .order-banner { background: #e3f2fd; border: none; border-radius: 15px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .brand-link { text-decoration: none; color: #666; display: block; padding: 8px 0; transition: 0.2s; }
-        .brand-link:hover { color: #007bff; padding-left: 5px; }
+        /* Base Styling */
+        body { background: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; color: #1A1A1A; overflow-x: hidden; }
+
+        /* Premium Navbar */
+        .navbar { padding: 25px 0; background: #ffffff; transition: 0.3s; }
+        .navbar-brand { letter-spacing: 2px; font-weight: 700; color: #1A1A1A !important; text-transform: uppercase; }
+
+        /* ✅ HERO SECTION - REAL DUAL TONE GRADIENT */
+        .hero-section {
+            background: linear-gradient(135deg, #E5E5DE 0%, #F5F5F0 100%);
+            color: #1A1A1A;
+            padding: 120px 0;
+            border-radius: 0 0 60px 60px;
+            margin-bottom: 60px;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .hero-title {
+            font-weight: 800;
+            font-size: 4.2rem;
+            line-height: 1;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+        }
+        .hero-title span { color: #A89880; display: block; }
+
+        /* ✅ SEARCH CONTAINER - HIGH DEPTH SHADOW */
+        .search-container {
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 40px;
+            box-shadow: 0 35px 70px rgba(0,0,0,0.07);
+        }
+        .form-control-premium {
+            background: #F9F9F7 !important;
+            border: 1px solid #EAEAEA !important;
+            padding: 18px 25px;
+            border-radius: 18px;
+            font-size: 1rem;
+            color: #1A1A1A;
+        }
+        .form-control-premium:focus {
+            box-shadow: 0 0 0 4px rgba(168, 152, 128, 0.1);
+            border-color: #A89880 !important;
+        }
+
+        /* Product Cards */
+        .product-card {
+            background: #ffffff;
+            border-radius: 28px;
+            border: 1px solid #F0F0EB;
+            padding: 25px;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        .product-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+            border-color: #A89880;
+        }
+        .brand-badge {
+            background: #F5F5F0;
+            color: #A89880;
+            padding: 6px 16px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        /* Buttons & Pills */
+        .btn-premium-dark { background: #1A1A1A; color: #fff; border-radius: 15px; padding: 14px; font-weight: 600; border: none; transition: 0.3s; }
+        .btn-premium-dark:hover { background: #333; transform: scale(1.03); color: #fff; }
+
+        .btn-premium-outline { border: 1.5px solid #1A1A1A; color: #1A1A1A; border-radius: 15px; padding: 12px; font-weight: 600; transition: 0.3s; }
+        .btn-premium-outline:hover { background: #1A1A1A; color: #fff; }
+
+        .btn-user-pill { background: #F5F5F0; border: none; border-radius: 50px; padding: 12px 25px; color: #1A1A1A; font-weight: 600; }
+
+        /* Sidebar Filter */
+        .brand-card { background: #F5F5F0; border-radius: 28px; padding: 30px; border: none; }
+        .brand-link { text-decoration: none; color: #666; display: block; padding: 12px 0; font-weight: 500; transition: 0.3s; }
+        .brand-link:hover { color: #A89880; transform: translateX(5px); }
+        .brand-link.active { color: #1A1A1A; font-weight: 800; }
     </style>
 </head>
 <body>
 
-<div th:if="${param.success}" class="alert alert-success alert-dismissible fade show alert-floating" role="alert">
-    <strong>Success!</strong> Item added to cart.
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div th:if="${param.success}" class="alert alert-dark alert-dismissible fade show shadow-lg border-0" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 1000; border-radius: 15px; background: #1A1A1A; color: white;">
+    <i class="bi bi-check-circle-fill me-2 text-success"></i> <strong>Success!</strong> Added to cart.
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
 </div>
 
-<nav class="navbar navbar-expand-lg bg-transparent">
+<nav class="navbar navbar-expand-lg">
     <div class="container">
-        <a class="navbar-brand fw-bold fs-4" href="/"><i class="bi bi-phone-vibrate me-2"></i>MOBILE STORE</a>
+        <a class="navbar-brand fs-4" href="/">Mobile Store</a>
         <div class="ms-auto d-flex align-items-center gap-3">
-
-            <div th:if="${session.user == null}" class="d-flex gap-2">
-                <a href="/login" class="btn btn-outline-dark rounded-pill px-4 fw-bold">Signin</a>
-                <a href="/register" class="btn btn-outline-dark rounded-pill px-4 fw-bold">Signup</a>
+            <div th:if="${session.user == null}" class="d-flex gap-4">
+                <a href="/login" class="brand-link px-2">Signin</a>
+                <a href="/register" class="btn btn-premium-dark px-4">Get Started</a>
             </div>
 
             <div class="dropdown" th:if="${session.user != null}">
                 <button class="btn btn-user-pill dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-person-circle me-1"></i> <span th:text="${session.user.name}"></span>
+                    <span th:text="${session.user.name}"></span>
                 </button>
-                <ul class="dropdown-menu border-0 shadow-lg mt-2">
-                    <li><h6 class="dropdown-header text-dark fw-bold">Account Info</h6></li>
-                    <li>
-                        <a class="dropdown-item disabled text-muted" href="#">
-                            <i class="bi bi-envelope me-2"></i><span th:text="${session.user.email}"></span>
-                        </a>
-                    </li>
+                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg mt-3 p-3" style="border-radius: 20px;">
+                    <li><a class="dropdown-item rounded-3 py-2" href="/user/my-orders">My Orders</a></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="/user/my-orders"><i class="bi bi-box-seam me-2"></i>My Orders 📦</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    <li><a class="dropdown-item text-danger rounded-3 py-2" href="/logout">Logout</a></li>
                 </ul>
             </div>
 
-            <a th:if="${session.user != null}" href="/cart" class="btn btn-dark rounded-pill px-4 position-relative">
-                Cart <i class="bi bi-cart3 ms-1"></i>
+            <a th:if="${session.user != null}" href="/cart" class="btn btn-premium-dark position-relative px-4">
+                <i class="bi bi-bag-heart me-2"></i>Cart
                 <span th:if="${session.pendingProductId != null or (cartCount != null and cartCount > 0)}"
-                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                      style="font-size: 0.7rem;">
+                      class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                     <span th:text="${session.pendingProductId != null ? 1 : cartCount}"></span>
                 </span>
             </a>
@@ -68,28 +131,19 @@
     </div>
 </nav>
 
-<div class="container" th:if="${session.user != null}">
-    <div class="order-banner shadow-sm border-start border-primary border-5">
-        <div>
-            <h6 class="mb-0 fw-bold text-primary">Welcome back, <span th:text="${session.user.name}"></span>!</h6>
-            <small class="text-muted">Explore the latest collection and manage your orders.</small>
-        </div>
-        <a href="/user/my-orders" class="btn btn-primary btn-sm rounded-pill px-4">My Orders</a>
-    </div>
-</div>
-
 <div class="hero-section">
     <div class="container">
         <div class="row align-items-center">
-            <div class="col-md-7 text-center text-md-start">
-                <h1 class="display-3 fw-bold mb-3">Experience<br><span>Innovation.</span></h1>
-                <p class="text-secondary fs-5">Get the latest flagship devices at best prices with secure delivery.</p>
+            <div class="col-md-6">
+                <h1 class="hero-title">Refined.<span>Tech.</span></h1>
+                <p class="text-muted fs-5 mb-4" style="max-width: 450px;">A curated collection of modern essentials for the sophisticated user.</p>
             </div>
-            <div class="col-md-5 mt-5 mt-md-0">
-                <div class="bg-white p-4 rounded-5 shadow-lg">
+            <div class="col-md-6">
+                <div class="search-container">
                     <form th:action="@{/search}" method="get">
-                        <input type="text" name="query" class="form-control border-0 py-3 mb-3 bg-light rounded-4" placeholder="Search model (iPhone, Samsung...)">
-                        <button class="btn btn-info w-100 py-3 text-white fw-bold rounded-4">Search Now</button>
+                        <label class="small fw-bold text-muted mb-3 text-uppercase" style="letter-spacing: 1px;">Find your next device</label>
+                        <input type="text" name="query" class="form-control form-control-premium mb-3" placeholder="Search Apple, Samsung, etc...">
+                        <button class="btn btn-premium-dark w-100 py-3">Search Collection</button>
                     </form>
                 </div>
             </div>
@@ -100,12 +154,12 @@
 <div class="container pb-5">
     <div class="row">
         <div class="col-md-3">
-            <div class="brand-card mb-4">
-                <h6 class="fw-bold mb-4 text-muted"><i class="bi bi-filter-left me-2"></i>BRANDS</h6>
-                <div class="list-group list-group-flush">
-                    <a th:href="@{/}" class="brand-link fw-bold text-primary">All Collection</a>
+            <div class="brand-card shadow-sm">
+                <h6 class="fw-bold mb-4 small text-uppercase" style="letter-spacing: 1px;">Categories</h6>
+                <div class="list-group list-group-flush bg-transparent">
+                    <a th:href="@{/}" class="brand-link active">All Collection</a>
                     <th:block th:each="b : ${listBrands}">
-                        <a th:href="@{/(brand=${b})}" class="brand-link" th:text="${b}"></a>
+                        <a th:href="@{/(brand=${b})}" class="brand-link text-capitalize" th:text="${b}"></a>
                     </th:block>
                 </div>
             </div>
@@ -115,15 +169,18 @@
             <div class="row g-4">
                 <div class="col-md-4" th:each="p : ${listProducts}">
                     <div class="card h-100 product-card">
-                        <img th:src="${p.image}" class="card-img-top p-3" style="height:200px; object-fit:contain;">
-                        <div class="card-body text-center">
-                            <p class="text-uppercase small text-muted mb-1" th:text="${p.brand}"></p>
-                            <h6 class="fw-bold" th:text="${p.name}"></h6>
-                            <h5 class="fw-bold text-dark mb-3" th:text="'₹' + ${p.price}"></h5>
-                            <div class="d-grid gap-2">
-                                <a th:href="@{'/product/' + ${p.id}}" class="btn btn-dark py-2" style="border-radius: 12px;">Details</a>
-                                <a th:href="@{'/add-to-cart/' + ${p.id}}" class="btn btn-outline-primary py-2" style="border-radius: 12px;">
-                                    <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                        <div class="text-center mb-3">
+                            <span class="brand-badge text-uppercase" th:text="${p.brand}"></span>
+                        </div>
+                        <img th:src="${p.image}" class="card-img-top p-2" style="height:220px; object-fit:contain;">
+                        <div class="card-body px-0">
+                            <h6 class="fw-bold mb-1" th:text="${p.name}"></h6>
+                            <p class="text-muted small mb-3">Certified Premium Device</p>
+                            <h5 class="fw-bold mb-4" th:text="'₹' + ${p.price}"></h5>
+                            <div class="d-flex gap-2">
+                                <a th:href="@{'/product/' + ${p.id}}" class="btn btn-premium-outline flex-grow-1 py-2 small">View</a>
+                                <a th:href="@{'/add-to-cart/' + ${p.id}}" class="btn btn-premium-dark flex-grow-1 py-2 small">
+                                    <i class="bi bi-cart3"></i>
                                 </a>
                             </div>
                         </div>

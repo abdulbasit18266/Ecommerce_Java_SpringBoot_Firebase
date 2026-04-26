@@ -16,7 +16,6 @@ public class UserServices {
     public void saveUser(User user) {
         try {
             Firestore db = FirestoreClient.getFirestore();
-            // Agar user ki ID null hai, toh email ko hi ID bana dete hain
             if (user.getId() == null || user.getId().isEmpty()) {
                 user.setId(user.getEmail());
             }
@@ -29,7 +28,6 @@ public class UserServices {
     public User login(String email, String password) {
         try {
             Firestore db = FirestoreClient.getFirestore();
-            // Querying by email and password
             QuerySnapshot query = db.collection(COLLECTION_NAME)
                     .whereEqualTo("email", email)
                     .whereEqualTo("password", password)
@@ -38,17 +36,42 @@ public class UserServices {
             if (!query.isEmpty()) {
                 QueryDocumentSnapshot document = query.getDocuments().get(0);
                 User user = document.toObject(User.class);
-
-                // Safety: Agar object ke andar 'id' null hai, toh document ID se bhar do
                 if (user != null && (user.getId() == null || user.getId().isEmpty())) {
                     user.setId(document.getId());
                 }
                 return user;
             }
         } catch (Exception e) {
-            System.err.println("Login Error: " + e.getMessage());
             e.printStackTrace();
         }
         return null;
+    }
+
+    // ✅ NEW: Find user by email (Forgot password ke liye)
+    public User findByEmail(String email) {
+        try {
+            Firestore db = FirestoreClient.getFirestore();
+            QuerySnapshot query = db.collection(COLLECTION_NAME)
+                    .whereEqualTo("email", email)
+                    .get().get();
+
+            if (!query.isEmpty()) {
+                return query.getDocuments().get(0).toObject(User.class);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ✅ NEW: Update only password in Firestore
+    public void updatePassword(String email, String newPassword) {
+        try {
+            Firestore db = FirestoreClient.getFirestore();
+            db.collection(COLLECTION_NAME).document(email)
+                    .update("password", newPassword).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

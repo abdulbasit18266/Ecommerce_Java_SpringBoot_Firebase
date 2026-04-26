@@ -24,11 +24,11 @@ public class OrderController {
         if (user == null) return "redirect:/login";
 
         try {
+            // ✅ Important: User table ka email aur name session se le rahe hain
             order.setEmail(user.getEmail());
-            order.setCustomerName(user.getName());
+            // order.getPhoneNumber() mein form wala number aayega (jo user ne checkout mein dala hai)
 
             List<Object[]> cartItems = cartService.getCartWithProducts(user.getId());
-
             String productNames = cartItems.stream()
                     .map(item -> item[1].toString() + " (x" + item[5].toString() + ")")
                     .collect(Collectors.joining(", "));
@@ -39,13 +39,10 @@ public class OrderController {
                     .sum();
             order.setTotalAmount(total);
 
-            // 1. Order save
+            // Order save hoga naye shipping phone number ke saath
             orderService.saveOrder(order);
 
-            // 2. Clear Firebase Cart
             cartService.clearCart(user.getId());
-
-            // 3. ✅ FINAL FIX: Clear session persistence
             session.removeAttribute("pendingProductId");
 
             return "redirect:/order-success";
@@ -54,7 +51,6 @@ public class OrderController {
             return "redirect:/checkout?error=true";
         }
     }
-
     @GetMapping("/user/my-orders")
     public String viewMyOrders(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");

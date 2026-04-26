@@ -1,18 +1,145 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Success</title>
+    <meta charset="UTF-8">
+    <title>Order Confirmed - Mobile Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Global Theme */
+        body {
+            background: linear-gradient(135deg, #E5E5DE 0%, #F5F5F0 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            color: #1A1A1A;
+        }
+
+        /* Success Card */
+        .success-card {
+            width: 100%;
+            max-width: 550px;
+            background: #ffffff;
+            border-radius: 40px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 35px 70px rgba(0,0,0,0.07);
+            margin: auto;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Animated Success Icon */
+        .success-icon {
+            font-size: 5rem;
+            color: #A89880; /* Boutique Tan Color */
+            margin-bottom: 25px;
+            display: inline-block;
+            animation: scaleUp 0.6s ease-out;
+        }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .success-title {
+            font-weight: 800;
+            font-size: 2.5rem;
+            letter-spacing: -1.5px;
+            margin-bottom: 15px;
+        }
+
+        .success-msg {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* Premium Buttons */
+        .btn-premium-dark {
+            background: #1A1A1A;
+            color: #fff;
+            border-radius: 15px;
+            padding: 16px 35px;
+            font-weight: 600;
+            border: none;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-premium-dark:hover {
+            background: #333;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            color: #fff;
+        }
+
+        .btn-premium-outline {
+            border: 1.5px solid #1A1A1A;
+            color: #1A1A1A;
+            border-radius: 15px;
+            padding: 15px 35px;
+            font-weight: 600;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-premium-outline:hover {
+            background: #1A1A1A;
+            color: #fff;
+        }
+
+        .order-id-badge {
+            background: #F5F5F0;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            color: #A89880;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container text-center mt-5">
-    <h1 class="text-success">✅ Order Placed Successfully</h1>
-    <p class="text-muted">Thank you for shopping with us</p>
+<div class="container">
+    <div class="success-card">
+        <div class="success-icon">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
 
-    <a href="/" class="btn btn-dark mt-3">Continue Shopping</a>
-    <a href="/user/my-orders" class="btn btn-primary mt-3">My Orders</a>
+        <h1 class="success-title">It's Confirmed.</h1>
+
+        <div class="order-id-badge">
+            <i class="bi bi-box-seam me-2"></i> Your order has been placed
+        </div>
+
+        <p class="success-msg">
+            Thank you for choosing <strong>Mobile Store</strong>. <br>
+            We've received your order and our team is already preparing your refined technology for delivery.
+        </p>
+
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-3">
+            <a href="/user/my-orders" class="btn-premium-dark">
+                <i class="bi bi-list-check me-2"></i>View My Orders
+            </a>
+            <a href="/" class="btn-premium-outline">
+                Continue Shopping
+            </a>
+        </div>
+
+        <p class="mt-5 small text-muted" style="opacity: 0.6;">
+            A confirmation email will be sent to your registered address shortly.
+        </p>
+    </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ package com.mobilestore.Abdulbasit.controller;
 import com.mobilestore.Abdulbasit.entity.User;
 import com.mobilestore.Abdulbasit.service.UserServices;
 import com.mobilestore.Abdulbasit.service.OrderService;
-import com.mobilestore.Abdulbasit.service.CartService; // Added
+import com.mobilestore.Abdulbasit.service.CartService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,7 +15,7 @@ public class UserController {
 
     @Autowired private UserServices userServices;
     @Autowired private OrderService orderService;
-    @Autowired private CartService cartService; // Added for migration
+    @Autowired private CartService cartService;
 
     @GetMapping("/login")
     public String showLoginPage() {
@@ -39,7 +39,9 @@ public class UserController {
                 if ("ADMIN".equals(user.getRole())) return "redirect:/admin/dashboard";
                 return "redirect:/";
             } else {
+                // ✅ Update: Added showForgot flag to show the link only on error
                 model.addAttribute("error", "Invalid Email or Password!");
+                model.addAttribute("showForgot", true);
                 return "login";
             }
         } catch (Exception e) {
@@ -55,13 +57,10 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute User user, Model model, HttpSession session) { // Added session
+    public String registerUser(@ModelAttribute User user, Model model, HttpSession session) {
         try {
             user.setRole("USER");
             userServices.saveUser(user);
-
-            // ✅ NEW: Product persistence for register too
-            // Note: Migration normally happens at login, but we keep the session ID safe here.
             return "redirect:/login?success=true";
         } catch (Exception e) {
             model.addAttribute("error", "Registration Failed!");
