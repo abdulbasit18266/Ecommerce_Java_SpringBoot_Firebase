@@ -29,17 +29,18 @@ public class UserController {
             if (user != null) {
                 session.setAttribute("user", user);
 
-                // ✅ Migration logic
                 String pendingId = (String) session.getAttribute("pendingProductId");
                 if (pendingId != null) {
                     cartService.addToCart(user.getId(), pendingId);
                     session.removeAttribute("pendingProductId");
                 }
 
-                if ("ADMIN".equals(user.getRole())) return "redirect:/admin/dashboard";
+                // Role check karke sahi page par redirect karna
+                if ("ADMIN".equals(user.getRole())) {
+                    return "redirect:/admin/dashboard";
+                }
                 return "redirect:/";
             } else {
-                // ✅ Update: Added showForgot flag to show the link only on error
                 model.addAttribute("error", "Invalid Email or Password!");
                 model.addAttribute("showForgot", true);
                 return "login";
@@ -57,9 +58,9 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute User user, Model model, HttpSession session) {
+    public String registerUser(@ModelAttribute User user, Model model) {
         try {
-            user.setRole("USER");
+            user.setRole("USER"); // Naya user hamesha 'USER' banega
             userServices.saveUser(user);
             return "redirect:/login?success=true";
         } catch (Exception e) {
