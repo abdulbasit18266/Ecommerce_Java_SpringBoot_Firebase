@@ -28,6 +28,53 @@ A professional, full-stack E-commerce web application developed as a **Final Yea
 - **Mailing:** Spring Mail Starter (SMTP)
 - **Build Tool:** Maven
 
+### **1. System Requirements**
+* **Java JDK:** Version 17 or higher must be installed.
+* **Internet Connectivity:** Required for Firebase sync and Email services.
+* **System Clock Sync:** Ensure your PC time is set to **"Set time automatically"**. (Mandatory for Firebase Auth).
+
+
+### **2. Pre-Run Configuration**
+* **Firebase Credentials:** Place your `serviceAccountKey.json` file inside the `src/main/resources/` directory.
+* **SMTP Setup:** Verify SMTP credentials in `application.properties` for the Email module.
+
+
+## 🚀 3. EXECUTION STEPS VIA COMMAND PROMPT (CMD)
+
+### Step 1: Open Project Directory
+Navigate to the root folder of the project (where `pom.xml` is located). Type `cmd` in the Windows Explorer address bar and press Enter.
+
+### Step 2: Clean and Build Project
+Execute the following command to download dependencies and compile the source code:
+
+### cmd command 
+'mvnw clean install'.
+
+### Step 3: Run Application
+'mvnw spring-boot:run'.
+
+
+---
+
+## 🔐 Application Access
+
+- Open browser:'http://localhost:8080'.
+
+
+### Features
+- OTP-based password recovery
+- Role-based Admin panel
+- Order confirmation email system
+
+---
+
+## 🛑 Troubleshooting
+
+- **Port 8080 busy:** Close IntelliJ or other running instances
+- **Stop server:** Press `Ctrl + C` then `Y`.
+
+---
+
 ## 📁 Project Structure
 
 ```text
@@ -36,3 +83,4 @@ src/main/java/com/mobilestore/Abdulbasit/
 ├── entity/           # Data models (User, Product, Order, Cart)
 ├── service/          # Business logic (MailService, FirebaseService)
 └── config/           # Firebase & App configurations
+
